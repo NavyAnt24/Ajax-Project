@@ -1,0 +1,66 @@
+<% if current_user %>
+ <% friends = current_user.friendships_made %>
+ <% end %>
+
+<% @users.each do |user| %>
+	<div class='link_to_user'><%= link_to user.username, user_url(user) %></div>
+			<% next if current_user == user %>
+	<% if !friends.pluck(:friendship_recipient_id).include?(user.id) %>
+
+			<div class='add_friend'>
+				<%= button_to "Add Friend", friendships_url, {:id => user.id, :class => 'friend'} %></div>
+				<p></p>
+
+	<% else %>
+		<div class='unfriend'>
+			<%= button_to "Remove Friend", friendship_url(user), {:id => user.id, :class => 'unfriend'} %></div>
+			<p></p>
+	<% end %>
+
+
+	<% end %>
+
+<script>
+$(document).ready(function() {
+	$('.friend').click(function(event) {
+		event.preventDefault();
+		$(event.target).attr('value', "Friending...")
+
+		$.ajax({
+			url: '/friendships',
+			type: "POST",
+			data: {
+				friendship_maker_id: <%= current_user.id %>,
+				friendship_recipient_id: event.target.id
+			},
+			success: function() {
+				$(event.target).remove();
+			}
+		});
+	});
+
+	$('.unfriend').click(function(event) {
+		event.preventDefault();
+		$(event.target).attr('value', "Unfriending...")
+		alert(event.target.id)
+
+		@friendship_recipient_id = event.target.id
+		@current_user = <%= current_user %>
+
+		$.ajax({
+			<% @friendship = Friendship.find(:friendship_recipient_id => @friendship_recipient_id, :friendship_maker_id => @current_user) %>
+			friendship_id = <%= @friendship.id %>
+			url: "/friendship/" + friendship_id,
+			type: "DELETE",
+			data: {
+				friendship_id: event.target.id
+			},
+			success: function() {
+				$(event.target).remove();
+			}
+		});
+	});
+
+})
+
+</script>
